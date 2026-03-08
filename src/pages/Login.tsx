@@ -77,7 +77,7 @@ export default function Login() {
               />
             </div>
 
-            <button type="submit" disabled={isLoading || !guestId} className="btn-primary py-4 text-lg">
+            <button type="submit" disabled={isLoading || !guestId.trim() || !displayName.trim()} className="btn-primary py-4 text-lg">
               {isLoading ? (
                 <Loader2 className="w-6 h-6 animate-spin" />
               ) : (
