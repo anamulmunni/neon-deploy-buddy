@@ -24,6 +24,21 @@
     --input: 250 15% 16%;
     --ring: 270 85% 60%;
     --radius: 0.75rem;
+
+    /* Extended palette */
+    --emerald: 160 84% 39%;
+    --emerald-foreground: 0 0% 100%;
+    --amber: 38 92% 50%;
+    --amber-foreground: 0 0% 10%;
+    --cyan: 192 91% 46%;
+    --cyan-foreground: 0 0% 100%;
+    --rose: 350 89% 60%;
+    --rose-foreground: 0 0% 100%;
+    --indigo: 239 84% 67%;
+    --indigo-foreground: 0 0% 100%;
+    --teal: 172 66% 50%;
+    --teal-foreground: 0 0% 100%;
+
     --sidebar-background: 240 20% 6%;
     --sidebar-foreground: 220 20% 95%;
     --sidebar-primary: 270 85% 60%;
@@ -57,5 +72,30 @@
   }
   .btn-destructive {
     @apply w-full bg-destructive text-destructive-foreground font-bold rounded-xl px-6 py-3 flex items-center justify-center gap-2 transition-all hover:opacity-90;
+  }
+  .btn-emerald {
+    @apply w-full font-bold rounded-xl px-6 py-3 flex items-center justify-center gap-2 transition-all hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed;
+    background: hsl(var(--emerald));
+    color: hsl(var(--emerald-foreground));
+  }
+  .btn-amber {
+    @apply w-full font-bold rounded-xl px-6 py-3 flex items-center justify-center gap-2 transition-all hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed;
+    background: hsl(var(--amber));
+    color: hsl(var(--amber-foreground));
+  }
+  .btn-cyan {
+    @apply w-full font-bold rounded-xl px-6 py-3 flex items-center justify-center gap-2 transition-all hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed;
+    background: hsl(var(--cyan));
+    color: hsl(var(--cyan-foreground));
+  }
+  .btn-rose {
+    @apply w-full font-bold rounded-xl px-6 py-3 flex items-center justify-center gap-2 transition-all hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed;
+    background: hsl(var(--rose));
+    color: hsl(var(--rose-foreground));
+  }
+  .btn-indigo {
+    @apply w-full font-bold rounded-xl px-6 py-3 flex items-center justify-center gap-2 transition-all hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed;
+    background: hsl(var(--indigo));
+    color: hsl(var(--indigo-foreground));
   }
 }
