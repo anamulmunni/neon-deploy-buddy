@@ -18,6 +18,9 @@ import {
   Key,
   Settings,
   Target,
+  User,
+  Wallet,
+  Calendar,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import {
@@ -34,6 +37,7 @@ import {
   apiAdminResetAllSubmittedNumbers,
   apiGetPoolStats,
   apiDeleteUsedKeys,
+  apiSearchByPaymentNumber,
 } from "@/lib/api";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -52,6 +56,9 @@ export default function AdminPanel() {
   const [showVerifiedUsers, setShowVerifiedUsers] = useState(false);
   const [poolPassword, setPoolPassword] = useState("");
   const [isPoolUnlocked, setIsPoolUnlocked] = useState(false);
+  const [paymentSearchQuery, setPaymentSearchQuery] = useState("");
+  const [paymentSearchResults, setPaymentSearchResults] = useState<any[] | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
   const { toast } = useToast();
 
   const { data: users } = useQuery({
@@ -252,6 +259,98 @@ export default function AdminPanel() {
             <p className="text-xs text-muted-foreground">রেডি কি ({totalUsedKeys} ব্যবহৃত)</p>
           </div>
         </div>
+
+        {/* Payment Number Search */}
+        <section className="glass-card rounded-2xl p-6 space-y-4 border" style={{ borderColor: 'hsl(var(--amber) / 0.3)' }}>
+          <div className="flex items-center gap-2">
+            <Wallet className="w-5 h-5" style={{ color: 'hsl(var(--amber))' }} />
+            <h2 className="font-bold text-lg">পেমেন্ট নম্বর দিয়ে সার্চ</h2>
+          </div>
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="w-4 h-4 absolute left-3 top-3.5 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="bKash/Nagad নম্বর দিন..."
+                className="input-field pl-10"
+                value={paymentSearchQuery}
+                onChange={(e) => setPaymentSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && paymentSearchQuery.trim()) {
+                    setIsSearching(true);
+                    apiSearchByPaymentNumber(paymentSearchQuery.trim()).then(r => {
+                      setPaymentSearchResults(r);
+                      setIsSearching(false);
+                    }).catch(() => { setPaymentSearchResults([]); setIsSearching(false); });
+                  }
+                }}
+              />
+            </div>
+            <button
+              onClick={() => {
+                if (!paymentSearchQuery.trim()) return;
+                setIsSearching(true);
+                apiSearchByPaymentNumber(paymentSearchQuery.trim()).then(r => {
+                  setPaymentSearchResults(r);
+                  setIsSearching(false);
+                }).catch(() => { setPaymentSearchResults([]); setIsSearching(false); });
+              }}
+              className="btn-primary w-auto px-4"
+              disabled={isSearching || !paymentSearchQuery.trim()}
+            >
+              {isSearching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+            </button>
+          </div>
+
+          {paymentSearchResults !== null && (
+            <div className="space-y-3">
+              {paymentSearchResults.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">কোনো রেজাল্ট পাওয়া যায়নি</p>
+              ) : (
+                <>
+                  {/* Group by admin */}
+                  {(() => {
+                    const grouped: Record<string, any[]> = {};
+                    paymentSearchResults.forEach((r: any) => {
+                      const admin = r.submitted_by || "Unknown";
+                      if (!grouped[admin]) grouped[admin] = [];
+                      grouped[admin].push(r);
+                    });
+                    return Object.entries(grouped).map(([adminName, rows]) => (
+                      <div key={adminName} className="rounded-xl border border-border bg-secondary/30 overflow-hidden">
+                        <div className="p-4 border-b border-border" style={{ background: 'hsl(var(--amber) / 0.05)' }}>
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, hsl(var(--amber)), hsl(var(--rose)))' }}>
+                              <User className="w-5 h-5 text-primary-foreground" />
+                            </div>
+                            <div>
+                              <p className="font-bold">{adminName}</p>
+                              <p className="text-xs text-muted-foreground">{rows.length} টি নম্বর সাবমিট • {rows[0]?.payment_method?.toUpperCase() || "Payment"}: {rows[0]?.payment_number}</p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="p-3 space-y-2 max-h-[300px] overflow-y-auto">
+                          {rows.map((row: any) => (
+                            <div key={row.id} className="rounded-lg border border-border bg-background/60 p-3 flex items-center justify-between">
+                              <div>
+                                <p className="font-mono text-sm">{row.phone_number}</p>
+                                <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                                  <Calendar className="w-3 h-3" />
+                                  {new Date(row.submitted_at).toLocaleString("bn-BD")}
+                                </p>
+                              </div>
+                              <p className="text-xs font-bold" style={{ color: 'hsl(var(--primary))' }}>Verified: {row.verified_count || 0}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ));
+                  })()}
+                </>
+              )}
+            </div>
+          )}
+        </section>
 
         {/* Pool Keys Management */}
         <section className="glass-card rounded-2xl p-6 space-y-4 border border-indigo/20">
@@ -713,9 +812,6 @@ export default function AdminPanel() {
                 <div className="flex gap-4 text-xs text-muted-foreground">
                   <span>
                     Verified: <span className="text-primary font-bold">{u.key_count}</span>
-                  </span>
-                  <span>
-                    Balance: <span className="text-primary font-bold">{u.balance} TK</span>
                   </span>
                 </div>
 

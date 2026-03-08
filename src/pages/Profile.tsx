@@ -1,12 +1,12 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import {
   ArrowLeft, User, Copy, Check, Shield, History,
-  Phone, HeadphonesIcon, Code2, MessageCircle, Pencil, Loader2
+  Phone, HeadphonesIcon, Code2, MessageCircle, Pencil, Loader2, Camera
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { apiGetUser, apiGetTransactions, apiUpdateDisplayName } from "@/lib/api";
+import { apiGetUser, apiGetTransactions, apiUpdateDisplayName, apiUploadAvatar } from "@/lib/api";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -17,6 +17,7 @@ export default function Profile() {
   const [activeTab, setActiveTab] = useState<"history" | "support">("history");
   const [isEditingName, setIsEditingName] = useState(false);
   const [newName, setNewName] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: user, isLoading } = useQuery({
     queryKey: ["user"],
@@ -36,6 +37,28 @@ export default function Profile() {
       toast({ title: "নাম আপডেট হয়েছে" });
     },
   });
+
+  const uploadAvatarMutation = useMutation({
+    mutationFn: (file: File) => apiUploadAvatar(file),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["user"] });
+      toast({ title: "প্রোফাইল ছবি আপডেট হয়েছে" });
+    },
+    onError: () => {
+      toast({ title: "ছবি আপলোড ব্যর্থ", variant: "destructive" });
+    },
+  });
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        toast({ title: "ছবি 2MB এর কম হতে হবে", variant: "destructive" });
+        return;
+      }
+      uploadAvatarMutation.mutate(file);
+    }
+  };
 
   const copyId = () => {
     if (user?.guest_id) {
@@ -59,8 +82,12 @@ export default function Profile() {
     return null;
   }
 
+  const avatarUrl = (user as any).avatar_url;
+
   return (
     <div className="min-h-screen pb-10">
+      <input type="file" ref={fileInputRef} accept="image/*" className="hidden" onChange={handleFileChange} />
+
       {/* Gradient Header */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-indigo/20 to-cyan/20 blur-3xl" />
@@ -71,9 +98,23 @@ export default function Profile() {
 
           {/* Profile Avatar */}
           <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center">
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary via-accent to-cyan flex items-center justify-center shadow-2xl shadow-primary/30 mb-4">
-              <User className="w-12 h-12 text-primary-foreground" />
-            </div>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="relative w-24 h-24 rounded-full bg-gradient-to-br from-primary via-accent to-cyan flex items-center justify-center shadow-2xl shadow-primary/30 mb-4 group overflow-hidden"
+            >
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover rounded-full" />
+              ) : (
+                <User className="w-12 h-12 text-primary-foreground" />
+              )}
+              <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
+                {uploadAvatarMutation.isPending ? (
+                  <Loader2 className="w-6 h-6 text-white animate-spin" />
+                ) : (
+                  <Camera className="w-6 h-6 text-white" />
+                )}
+              </div>
+            </button>
             
             {/* Name with edit */}
             <div className="flex items-center gap-2">
@@ -90,9 +131,10 @@ export default function Profile() {
                   <button
                     onClick={() => { if (newName.trim()) updateNameMutation.mutate(newName.trim()); }}
                     disabled={updateNameMutation.isPending || !newName.trim()}
-                    className="p-2 bg-emerald/20 rounded-lg hover:bg-emerald/30 transition-colors"
+                    className="p-2 rounded-lg transition-colors"
+                    style={{ background: 'hsl(var(--emerald) / 0.2)' }}
                   >
-                    {updateNameMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin text-emerald" /> : <Check className="w-4 h-4 text-emerald" />}
+                    {updateNameMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" style={{ color: 'hsl(var(--emerald))' }} /> : <Check className="w-4 h-4" style={{ color: 'hsl(var(--emerald))' }} />}
                   </button>
                 </div>
               ) : (
@@ -111,7 +153,7 @@ export default function Profile() {
             <div className="flex items-center gap-2 mt-1">
               <p className="text-sm text-muted-foreground font-mono">{user.guest_id}</p>
               <button onClick={copyId} className="p-1 hover:bg-secondary rounded transition-colors">
-                {copied ? <Check className="w-3 h-3 text-emerald" /> : <Copy className="w-3 h-3 text-muted-foreground" />}
+                {copied ? <Check className="w-3 h-3" style={{ color: 'hsl(var(--emerald))' }} /> : <Copy className="w-3 h-3 text-muted-foreground" />}
               </button>
             </div>
           </motion.div>
@@ -119,16 +161,16 @@ export default function Profile() {
       </div>
 
       <div className="max-w-md mx-auto px-4 -mt-8 space-y-4 relative z-20">
-        {/* Stats Cards - NO balance/TK */}
+        {/* Stats Cards */}
         <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="grid grid-cols-2 gap-3">
-          <div className="glass-card rounded-2xl p-4 text-center border border-emerald/30">
-            <Shield className="w-5 h-5 text-emerald mx-auto mb-1" />
-            <p className="text-xl font-bold text-emerald">{user.key_count || 0}</p>
+          <div className="glass-card rounded-2xl p-4 text-center" style={{ borderColor: 'hsl(var(--emerald) / 0.3)' }}>
+            <Shield className="w-5 h-5 mx-auto mb-1" style={{ color: 'hsl(var(--emerald))' }} />
+            <p className="text-xl font-bold" style={{ color: 'hsl(var(--emerald))' }}>{user.key_count || 0}</p>
             <p className="text-[10px] text-muted-foreground">ভেরিফাইড</p>
           </div>
-          <div className="glass-card rounded-2xl p-4 text-center border border-cyan/30">
-            <History className="w-5 h-5 text-cyan mx-auto mb-1" />
-            <p className="text-xl font-bold text-cyan">{transactions?.length || 0}</p>
+          <div className="glass-card rounded-2xl p-4 text-center" style={{ borderColor: 'hsl(var(--cyan) / 0.3)' }}>
+            <History className="w-5 h-5 mx-auto mb-1" style={{ color: 'hsl(var(--cyan))' }} />
+            <p className="text-xl font-bold" style={{ color: 'hsl(var(--cyan))' }}>{transactions?.length || 0}</p>
             <p className="text-[10px] text-muted-foreground">লেনদেন</p>
           </div>
         </motion.div>
@@ -137,17 +179,20 @@ export default function Profile() {
         <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }} className="glass-card rounded-2xl p-4 border border-border">
           <div className="flex items-center justify-between">
             <p className="text-sm text-muted-foreground">অ্যাকাউন্ট স্ট্যাটাস</p>
-            <span className={`px-3 py-1 rounded-full text-xs font-bold ${user.is_blocked ? 'bg-destructive/20 text-destructive' : 'bg-emerald/20 text-emerald'}`}>
+            <span className={`px-3 py-1 rounded-full text-xs font-bold ${user.is_blocked ? 'bg-destructive/20 text-destructive' : ''}`} style={!user.is_blocked ? { background: 'hsl(var(--emerald) / 0.2)', color: 'hsl(var(--emerald))' } : {}}>
               {user.is_blocked ? "ব্লকড" : "সক্রিয়"}
             </span>
           </div>
           <div className="flex items-center justify-between mt-2">
             <p className="text-sm text-muted-foreground">পেমেন্ট স্ট্যাটাস</p>
             <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-              user.payment_status === "received" ? 'bg-emerald/20 text-emerald' :
-              user.payment_status === "pending" ? 'bg-amber/20 text-amber' :
+              user.payment_status === "received" ? '' :
+              user.payment_status === "pending" ? '' :
               'bg-secondary text-muted-foreground'
-            }`}>
+            }`} style={
+              user.payment_status === "received" ? { background: 'hsl(var(--emerald) / 0.2)', color: 'hsl(var(--emerald))' } :
+              user.payment_status === "pending" ? { background: 'hsl(var(--amber) / 0.2)', color: 'hsl(var(--amber))' } : {}
+            }>
               {user.payment_status === "received" ? "পেয়েছি" : user.payment_status === "pending" ? "পেন্ডিং" : "কোনো রিকোয়েস্ট নেই"}
             </span>
           </div>
@@ -158,16 +203,18 @@ export default function Profile() {
           <button
             onClick={() => setActiveTab("history")}
             className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 ${
-              activeTab === "history" ? "bg-indigo text-indigo-foreground shadow-lg" : "text-muted-foreground"
+              activeTab === "history" ? "shadow-lg text-primary-foreground" : "text-muted-foreground"
             }`}
+            style={activeTab === "history" ? { background: 'hsl(var(--indigo))' } : {}}
           >
             <History className="w-4 h-4" /> হিস্ট্রি
           </button>
           <button
             onClick={() => setActiveTab("support")}
             className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 ${
-              activeTab === "support" ? "bg-teal text-teal-foreground shadow-lg" : "text-muted-foreground"
+              activeTab === "support" ? "shadow-lg text-primary-foreground" : "text-muted-foreground"
             }`}
+            style={activeTab === "support" ? { background: 'hsl(var(--teal))' } : {}}
           >
             <HeadphonesIcon className="w-4 h-4" /> সাপোর্ট
           </button>
@@ -175,7 +222,7 @@ export default function Profile() {
 
         {/* Tab Content */}
         {activeTab === "history" ? (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-card rounded-2xl overflow-hidden border border-indigo/20">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-card rounded-2xl overflow-hidden" style={{ borderColor: 'hsl(var(--indigo) / 0.2)' }}>
             {!transactions || transactions.length === 0 ? (
               <div className="p-8 text-center">
                 <History className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-50" />
@@ -186,13 +233,11 @@ export default function Profile() {
                 {transactions.map((tx: any, index: number) => (
                   <div key={tx.id} className="p-4 hover:bg-secondary/30 transition-colors flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-full ${
-                        tx.type === "earning" ? "bg-emerald/20" : "bg-rose/20"
-                      }`}>
+                      <div className={`p-2 rounded-full`} style={{ background: tx.type === "earning" ? 'hsl(var(--emerald) / 0.2)' : 'hsl(var(--rose) / 0.2)' }}>
                         {tx.type === "earning" ? (
-                          <Shield className="w-4 h-4 text-emerald" />
+                          <Shield className="w-4 h-4" style={{ color: 'hsl(var(--emerald))' }} />
                         ) : (
-                          <History className="w-4 h-4 text-rose" />
+                          <History className="w-4 h-4" style={{ color: 'hsl(var(--rose))' }} />
                         )}
                       </div>
                       <div>
@@ -205,12 +250,10 @@ export default function Profile() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className={`font-bold text-sm ${tx.type === "earning" ? "text-emerald" : "text-rose"}`}>
+                      <p className="font-bold text-sm" style={{ color: tx.type === "earning" ? 'hsl(var(--emerald))' : 'hsl(var(--rose))' }}>
                         {tx.type === "earning" ? "+1 verified" : "withdrawal"}
                       </p>
-                      <p className={`text-[10px] font-bold ${
-                        tx.status === "completed" ? "text-emerald" : tx.status === "pending" ? "text-amber" : "text-muted-foreground"
-                      }`}>
+                      <p className={`text-[10px] font-bold`} style={{ color: tx.status === "completed" ? 'hsl(var(--emerald))' : tx.status === "pending" ? 'hsl(var(--amber))' : undefined }}>
                         {tx.status === "completed" ? "সম্পন্ন" : tx.status === "pending" ? "পেন্ডিং" : tx.status}
                       </p>
                     </div>
@@ -221,11 +264,10 @@ export default function Profile() {
           </motion.div>
         ) : (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
-            {/* Developer Info */}
-            <div className="glass-card rounded-2xl p-6 border border-teal/20">
+            <div className="glass-card rounded-2xl p-6" style={{ borderColor: 'hsl(var(--teal) / 0.2)' }}>
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-teal to-cyan flex items-center justify-center">
-                  <Code2 className="w-6 h-6 text-teal-foreground" />
+                <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, hsl(var(--teal)), hsl(var(--cyan)))' }}>
+                  <Code2 className="w-6 h-6 text-primary-foreground" />
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">ডেভেলপার</p>
@@ -233,30 +275,27 @@ export default function Profile() {
                 </div>
               </div>
               <div className="space-y-3">
-                <a href="tel:01892564963" className="flex items-center gap-3 p-3 bg-emerald/10 border border-emerald/20 rounded-xl hover:bg-emerald/20 transition-all">
-                  <Phone className="w-5 h-5 text-emerald" />
+                <a href="tel:01892564963" className="flex items-center gap-3 p-3 rounded-xl hover:opacity-80 transition-all" style={{ background: 'hsl(var(--emerald) / 0.1)', border: '1px solid hsl(var(--emerald) / 0.2)' }}>
+                  <Phone className="w-5 h-5" style={{ color: 'hsl(var(--emerald))' }} />
                   <div>
                     <p className="text-xs text-muted-foreground">ফোন নম্বর</p>
-                    <p className="font-bold text-emerald">01892564963</p>
+                    <p className="font-bold" style={{ color: 'hsl(var(--emerald))' }}>01892564963</p>
                   </div>
                 </a>
               </div>
             </div>
 
-            {/* Support */}
-            <div className="glass-card rounded-2xl p-6 border border-rose/20">
+            <div className="glass-card rounded-2xl p-6" style={{ borderColor: 'hsl(var(--rose) / 0.2)' }}>
               <div className="flex items-center gap-3 mb-4">
-                <MessageCircle className="w-6 h-6 text-rose" />
+                <MessageCircle className="w-6 h-6" style={{ color: 'hsl(var(--rose))' }} />
                 <h3 className="font-bold text-lg">সাহায্য দরকার?</h3>
               </div>
               <p className="text-sm text-muted-foreground mb-4">
                 অ্যাপ সংক্রান্ত যেকোনো সমস্যার জন্য ডেভেলপারের সাথে যোগাযোগ করুন। আমরা সবসময় আপনার পাশে আছি।
               </p>
-              <div className="space-y-2">
-                <a href="tel:01892564963" className="btn-rose py-3">
-                  <Phone className="w-4 h-4" /> কল করুন
-                </a>
-              </div>
+              <a href="tel:01892564963" className="btn-rose py-3">
+                <Phone className="w-4 h-4" /> কল করুন
+              </a>
             </div>
 
             <div className="text-center py-4">
