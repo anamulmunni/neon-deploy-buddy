@@ -49,9 +49,9 @@ export default function AddKeys() {
         </button>
 
         {/* Ready Key Count */}
-        <div className="glass-card rounded-2xl p-4 text-center border border-primary/20 mb-6">
-          <Key className="w-6 h-6 text-primary mx-auto mb-2" />
-          <p className="text-3xl font-bold text-primary">{readyKeys.length}</p>
+        <div className="glass-card rounded-2xl p-4 text-center border border-cyan/20 mb-6">
+          <Key className="w-6 h-6 text-cyan mx-auto mb-2" />
+          <p className="text-3xl font-bold text-cyan">{readyKeys.length}</p>
           <p className="text-xs text-muted-foreground">রেডি কি</p>
         </div>
 

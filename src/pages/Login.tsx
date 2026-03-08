@@ -40,7 +40,7 @@ export default function Login() {
         className="w-full max-w-md relative z-10"
       >
         <div className="text-center mb-10">
-          <div className="w-20 h-20 bg-gradient-to-tr from-primary to-emerald-300 rounded-2xl mx-auto flex items-center justify-center mb-6 shadow-2xl shadow-primary/20 rotate-3">
+          <div className="w-20 h-20 bg-gradient-to-tr from-primary via-accent to-cyan rounded-2xl mx-auto flex items-center justify-center mb-6 shadow-2xl shadow-primary/20 rotate-3">
             <ShieldCheck className="w-10 h-10 text-primary-foreground" />
           </div>
           <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/60 mb-2">
