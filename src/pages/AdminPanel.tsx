@@ -331,7 +331,7 @@ export default function AdminPanel() {
                         </div>
                         <div className="p-3 space-y-2 max-h-[300px] overflow-y-auto">
                           {rows.map((row: any) => (
-                            <div key={row.id} className="rounded-lg border border-border bg-background/60 p-3 flex items-center justify-between">
+                            <div key={`${row.source}-${row.id}`} className="rounded-lg border border-border bg-background/60 p-3 flex items-center justify-between">
                               <div>
                                 <p className="font-mono text-sm">{row.phone_number}</p>
                                 <p className="text-[10px] text-muted-foreground flex items-center gap-1">
@@ -339,7 +339,12 @@ export default function AdminPanel() {
                                   {new Date(row.submitted_at).toLocaleString("bn-BD")}
                                 </p>
                               </div>
-                              <p className="text-xs font-bold" style={{ color: 'hsl(var(--primary))' }}>Verified: {row.verified_count || 0}</p>
+                              <div className="text-right">
+                                <p className="text-xs font-bold" style={{ color: 'hsl(var(--primary))' }}>Verified: {row.verified_count || 0}</p>
+                                <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${row.source === 'reset' ? 'bg-rose-500/20 text-rose-400' : 'bg-emerald-500/20 text-emerald-400'}`}>
+                                  {row.source === 'reset' ? '✓ Reset done' : '⏳ Active'}
+                                </span>
+                              </div>
                             </div>
                           ))}
                         </div>
