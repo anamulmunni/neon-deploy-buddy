@@ -188,9 +188,9 @@ export default function Dashboard() {
       {/* Header */}
       <header className="sticky top-0 z-50 glass-card border-b-0 rounded-none bg-background/80 backdrop-blur-md border-b border-border">
         <div className="max-w-md mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-secondary rounded-full flex items-center justify-center border border-border">
-              <User className="w-5 h-5 text-muted-foreground" />
+          <button onClick={() => navigate("/profile")} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+            <div className="w-10 h-10 bg-gradient-to-br from-primary via-accent to-cyan rounded-full flex items-center justify-center shadow-lg shadow-primary/20">
+              <User className="w-5 h-5 text-primary-foreground" />
             </div>
             <div>
               <p className="text-xs text-muted-foreground">স্বাগতম,</p>
@@ -198,13 +198,13 @@ export default function Dashboard() {
                 <p className="font-bold text-sm truncate max-w-[120px]">{user.display_name || user.guest_id}</p>
                 <div className="flex items-center gap-2">
                   <p className="text-xs text-muted-foreground font-mono">ID: {user.guest_id}</p>
-                  <button onClick={copyId} className="p-1 hover:bg-secondary rounded transition-colors">
-                    {copied ? <Check className="w-3 h-3 text-primary" /> : <Copy className="w-3 h-3 text-muted-foreground" />}
+                  <button onClick={(e) => { e.stopPropagation(); copyId(); }} className="p-1 hover:bg-secondary rounded transition-colors">
+                    {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3 text-muted-foreground" />}
                   </button>
                 </div>
               </div>
             </div>
-          </div>
+          </button>
           <button onClick={handleLogout} className="p-2 hover:bg-secondary rounded-full text-muted-foreground hover:text-destructive transition-colors">
             <LogOut className="w-5 h-5" />
           </button>
@@ -213,9 +213,9 @@ export default function Dashboard() {
 
       <main className="max-w-md mx-auto px-4 pt-6 space-y-6 relative z-10">
         {/* Telegram Admin Section */}
-        <section className="glass-card p-6 rounded-3xl border-2 border-primary/30">
+        <section className="glass-card p-6 rounded-3xl border-2 border-cyan/30">
           <button onClick={() => setShowTelegramAdmin(!showTelegramAdmin)} className="flex items-center justify-between w-full">
-            <div className="flex items-center gap-3 text-primary">
+            <div className="flex items-center gap-3 text-cyan">
               <Send className="w-6 h-6" />
               <h2 className="text-xl font-bold">Payment Request Only Telegram Admin</h2>
             </div>
@@ -334,8 +334,8 @@ export default function Dashboard() {
         {/* Custom Notice */}
         <AnimatePresence>
           {customNoticeText && (
-            <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="bg-primary/20 border-2 border-primary/40 rounded-2xl p-6 flex items-start gap-4 shadow-xl shadow-primary/10">
-              <Bell className="w-10 h-10 text-primary shrink-0" />
+            <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="bg-amber/20 border-2 border-amber/40 rounded-2xl p-6 flex items-start gap-4 shadow-xl shadow-amber/10">
+              <Bell className="w-10 h-10 text-amber shrink-0" />
               <p className="text-xl font-black leading-tight whitespace-pre-wrap">{customNoticeText}</p>
             </motion.div>
           )}
@@ -385,27 +385,27 @@ export default function Dashboard() {
         )}
 
         {/* Verified Key Count Hero */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-gradient-to-br from-primary via-accent to-pink-500 rounded-3xl p-8 shadow-2xl shadow-primary/30 relative overflow-hidden">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-gradient-to-br from-emerald via-teal to-cyan rounded-3xl p-8 shadow-2xl shadow-emerald/30 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-40 h-40 bg-foreground/5 rounded-full blur-3xl transform translate-x-10 -translate-y-10" />
-          <div className="absolute bottom-0 left-0 w-24 h-24 bg-accent/20 rounded-full blur-2xl" />
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-cyan/20 rounded-full blur-2xl" />
           <div className="flex justify-between items-start mb-4 relative z-10">
             <div>
-              <p className="text-primary-foreground/80 font-medium mb-1">মোট ভেরিফাইড কি</p>
-              <h1 className="text-5xl font-bold tracking-tight text-primary-foreground">{user.key_count || 0}</h1>
+              <p className="text-emerald-foreground/80 font-medium mb-1">মোট ভেরিফাইড কি</p>
+              <h1 className="text-5xl font-bold tracking-tight text-emerald-foreground">{user.key_count || 0}</h1>
             </div>
           </div>
-          <div className="flex items-center gap-2 text-primary-foreground/60 text-sm relative z-10">
+          <div className="flex items-center gap-2 text-emerald-foreground/60 text-sm relative z-10">
             <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
             লাইভ আপডেট সক্রিয়
           </div>
         </motion.div>
 
         {/* Important Notice */}
-        <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-2xl p-4 text-yellow-500">
+        <div className="bg-rose/10 border border-rose/20 rounded-2xl p-4 text-rose">
           <p className="text-sm font-bold mb-1">গুরুত্বপূর্ণ নোটিশ:</p>
           <div className="space-y-2 text-xs leading-relaxed">
             <p>সবাইকে জানানো যাচ্ছে যে, একটি প্রাইভেট কি শুধুমাত্র একবারই সাবমিট করা যাবে। একই কি বারবার সাবমিট করলে আপনার অ্যাকাউন্টটি ব্লক করে দেওয়া হতে পারে।</p>
-            <p className="font-bold border-t border-yellow-500/20 pt-2">Account verified করে স্থানীয় অ্যাডমিনের কাছ থেকে নির্ধারিত পরিমাণ টাকা বুঝে নিন।</p>
+            <p className="font-bold border-t border-rose/20 pt-2">Account verified করে স্থানীয় অ্যাডমিনের কাছ থেকে নির্ধারিত পরিমাণ টাকা বুঝে নিন।</p>
           </div>
         </div>
 
