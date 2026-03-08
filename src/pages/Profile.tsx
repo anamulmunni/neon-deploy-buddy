@@ -97,24 +97,26 @@ export default function Profile() {
           </button>
 
           {/* Profile Avatar */}
-          <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center">
-            <button
+           <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center">
+            <div
               onClick={() => fileInputRef.current?.click()}
-              className="relative w-24 h-24 rounded-full bg-gradient-to-br from-primary via-accent to-cyan flex items-center justify-center shadow-2xl shadow-primary/30 mb-4 group overflow-hidden"
+              role="button"
+              tabIndex={0}
+              className="relative w-24 h-24 rounded-full bg-gradient-to-br from-primary via-accent to-cyan flex items-center justify-center shadow-2xl shadow-primary/30 mb-4 cursor-pointer overflow-hidden active:scale-95 transition-transform"
             >
               {avatarUrl ? (
                 <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover rounded-full" />
               ) : (
                 <User className="w-12 h-12 text-primary-foreground" />
               )}
-              <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
+              <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-full">
                 {uploadAvatarMutation.isPending ? (
                   <Loader2 className="w-6 h-6 text-white animate-spin" />
                 ) : (
                   <Camera className="w-6 h-6 text-white" />
                 )}
               </div>
-            </button>
+            </div>
             
             {/* Name with edit */}
             <div className="flex items-center gap-2">
