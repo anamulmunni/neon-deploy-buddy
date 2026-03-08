@@ -83,7 +83,7 @@ export default function Profile() {
           </div>
           <div className="glass-card rounded-2xl p-4 text-center border border-amber/30">
             <Wallet className="w-5 h-5 text-amber mx-auto mb-1" />
-            <p className="text-xl font-bold text-amber">{user.balance || 0}৳</p>
+            <p className="text-xl font-bold text-amber">{user.balance || 0}</p>
             <p className="text-[10px] text-muted-foreground">ব্যালেন্স</p>
           </div>
           <div className="glass-card rounded-2xl p-4 text-center border border-cyan/30">
@@ -166,7 +166,7 @@ export default function Profile() {
                     </div>
                     <div className="text-right">
                       <p className={`font-bold text-sm ${tx.type === "earning" ? "text-emerald" : "text-rose"}`}>
-                        {tx.type === "earning" ? "+" : "-"}{tx.amount}৳
+                        {tx.type === "earning" ? "+1 verified" : "withdrawal"}
                       </p>
                       <p className={`text-[10px] font-bold ${
                         tx.status === "completed" ? "text-emerald" : tx.status === "pending" ? "text-amber" : "text-muted-foreground"
