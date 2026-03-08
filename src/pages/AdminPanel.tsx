@@ -50,6 +50,8 @@ export default function AdminPanel() {
   const [bonusTargetInput, setBonusTargetInput] = useState("");
   const [rewardRateInput, setRewardRateInput] = useState("");
   const [showVerifiedUsers, setShowVerifiedUsers] = useState(false);
+  const [poolPassword, setPoolPassword] = useState("");
+  const [isPoolUnlocked, setIsPoolUnlocked] = useState(false);
   const { toast } = useToast();
 
   const { data: users } = useQuery({
@@ -261,59 +263,91 @@ export default function AdminPanel() {
             <p className="text-xs text-muted-foreground">{(pool || []).length} টি মোট</p>
           </div>
 
-          <div className="flex gap-2">
-            <button
-              onClick={() => {
-                const all = (pool || []).map((k: any) => `${k.private_key} | ${k.verify_url} | ${k.is_used ? "USED" : "READY"} | ${k.added_by}`).join("\n");
-                navigator.clipboard.writeText(all);
-                toast({ title: "সব কি কপি হয়েছে" });
-              }}
-              className="flex-1 flex items-center justify-center gap-2 p-3 bg-secondary rounded-xl text-xs font-bold hover:bg-secondary/80 transition-colors"
-            >
-              <Copy className="w-4 h-4" /> সব কপি
-            </button>
-            <button
-              onClick={() => {
-                const ready = (pool || []).filter((k: any) => !k.is_used).map((k: any) => `${k.private_key} | ${k.verify_url}`).join("\n");
-                navigator.clipboard.writeText(ready);
-                toast({ title: "রেডি কি কপি হয়েছে" });
-              }}
-              className="flex-1 flex items-center justify-center gap-2 p-3 bg-primary/20 text-primary rounded-xl text-xs font-bold hover:bg-primary/30 transition-colors"
-            >
-              <Copy className="w-4 h-4" /> রেডি কপি
-            </button>
-          </div>
-
-          <button
-            onClick={() => {
-              if (confirm("সব ব্যবহৃত কি ডিলিট করতে চান?")) deleteUsedKeysMutation.mutate();
-            }}
-            disabled={deleteUsedKeysMutation.isPending || totalUsedKeys === 0}
-            className="w-full flex items-center justify-center gap-2 p-3 bg-destructive/20 text-destructive rounded-xl text-xs font-bold hover:bg-destructive/30 transition-colors disabled:opacity-50"
-          >
-            {deleteUsedKeysMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Trash2 className="w-4 h-4" /> ব্যবহৃত কি ডিলিট ({totalUsedKeys})</>}
-          </button>
-
-          {(pool || []).length > 0 && (
-            <div className="space-y-2 max-h-[400px] overflow-y-auto">
-              {(pool || []).map((k: any) => (
-                <div key={k.id} className={`p-3 rounded-xl border text-xs space-y-1 ${k.is_used ? 'bg-destructive/5 border-destructive/20' : 'bg-primary/5 border-primary/20'}`}>
-                  <div className="flex justify-between items-center">
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${k.is_used ? 'bg-destructive/20 text-destructive' : 'bg-primary/20 text-primary'}`}>
-                      {k.is_used ? "USED" : "READY"}
-                    </span>
-                    <span className="text-muted-foreground">{k.added_by}</span>
-                  </div>
-                  <p className="font-mono truncate">{k.private_key}</p>
-                  <button
-                    onClick={() => { navigator.clipboard.writeText(k.private_key); toast({ title: "কপি হয়েছে" }); }}
-                    className="text-primary hover:underline text-[10px]"
-                  >
-                    কপি
-                  </button>
-                </div>
-              ))}
+          {!isPoolUnlocked ? (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">কি দেখতে পাসওয়ার্ড দিন:</p>
+              <div className="flex gap-2">
+                <input
+                  type="password"
+                  placeholder="পাসওয়ার্ড..."
+                  className="input-field flex-1"
+                  value={poolPassword}
+                  onChange={(e) => setPoolPassword(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      if (poolPassword === "Anamul-963050") setIsPoolUnlocked(true);
+                      else toast({ title: "ভুল পাসওয়ার্ড", variant: "destructive" });
+                    }
+                  }}
+                />
+                <button
+                  onClick={() => {
+                    if (poolPassword === "Anamul-963050") setIsPoolUnlocked(true);
+                    else toast({ title: "ভুল পাসওয়ার্ড", variant: "destructive" });
+                  }}
+                  className="btn-primary w-auto px-4"
+                >
+                  আনলক
+                </button>
+              </div>
             </div>
+          ) : (
+            <>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    const all = (pool || []).map((k: any) => `${k.private_key} | ${k.verify_url} | ${k.is_used ? "USED" : "READY"} | ${k.added_by}`).join("\n");
+                    navigator.clipboard.writeText(all);
+                    toast({ title: "সব কি কপি হয়েছে" });
+                  }}
+                  className="flex-1 flex items-center justify-center gap-2 p-3 bg-secondary rounded-xl text-xs font-bold hover:bg-secondary/80 transition-colors"
+                >
+                  <Copy className="w-4 h-4" /> সব কপি
+                </button>
+                <button
+                  onClick={() => {
+                    const ready = (pool || []).filter((k: any) => !k.is_used).map((k: any) => `${k.private_key} | ${k.verify_url}`).join("\n");
+                    navigator.clipboard.writeText(ready);
+                    toast({ title: "রেডি কি কপি হয়েছে" });
+                  }}
+                  className="flex-1 flex items-center justify-center gap-2 p-3 bg-primary/20 text-primary rounded-xl text-xs font-bold hover:bg-primary/30 transition-colors"
+                >
+                  <Copy className="w-4 h-4" /> রেডি কপি
+                </button>
+              </div>
+
+              <button
+                onClick={() => {
+                  if (confirm("সব ব্যবহৃত কি ডিলিট করতে চান?")) deleteUsedKeysMutation.mutate();
+                }}
+                disabled={deleteUsedKeysMutation.isPending || totalUsedKeys === 0}
+                className="w-full flex items-center justify-center gap-2 p-3 bg-destructive/20 text-destructive rounded-xl text-xs font-bold hover:bg-destructive/30 transition-colors disabled:opacity-50"
+              >
+                {deleteUsedKeysMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Trash2 className="w-4 h-4" /> ব্যবহৃত কি ডিলিট ({totalUsedKeys})</>}
+              </button>
+
+              {(pool || []).length > 0 && (
+                <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                  {(pool || []).map((k: any) => (
+                    <div key={k.id} className={`p-3 rounded-xl border text-xs space-y-1 ${k.is_used ? 'bg-destructive/5 border-destructive/20' : 'bg-primary/5 border-primary/20'}`}>
+                      <div className="flex justify-between items-center">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${k.is_used ? 'bg-destructive/20 text-destructive' : 'bg-primary/20 text-primary'}`}>
+                          {k.is_used ? "USED" : "READY"}
+                        </span>
+                        <span className="text-muted-foreground">{k.added_by}</span>
+                      </div>
+                      <p className="font-mono truncate">{k.private_key}</p>
+                      <button
+                        onClick={() => { navigator.clipboard.writeText(k.private_key); toast({ title: "কপি হয়েছে" }); }}
+                        className="text-primary hover:underline text-[10px]"
+                      >
+                        কপি
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </section>
 
