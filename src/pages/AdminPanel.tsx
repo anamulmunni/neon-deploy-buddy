@@ -241,23 +241,23 @@ export default function AdminPanel() {
 
         {/* Stats Overview */}
         <div className="grid grid-cols-2 gap-3">
-          <div className="glass-card rounded-2xl p-4 text-center border border-primary/20">
-            <Users className="w-6 h-6 text-primary mx-auto mb-2" />
-            <p className="text-2xl font-bold text-primary">{totalUsers}</p>
+          <div className="glass-card rounded-2xl p-4 text-center border border-cyan/30">
+            <Users className="w-6 h-6 text-cyan mx-auto mb-2" />
+            <p className="text-2xl font-bold text-cyan">{totalUsers}</p>
             <p className="text-xs text-muted-foreground">মোট ইউজার</p>
           </div>
-          <div className="glass-card rounded-2xl p-4 text-center border border-primary/20">
-         <Key className="w-6 h-6 text-primary mx-auto mb-2" />
-            <p className="text-2xl font-bold text-primary">{totalReadyKeys}</p>
+          <div className="glass-card rounded-2xl p-4 text-center border border-amber/30">
+         <Key className="w-6 h-6 text-amber mx-auto mb-2" />
+            <p className="text-2xl font-bold text-amber">{totalReadyKeys}</p>
             <p className="text-xs text-muted-foreground">রেডি কি ({totalUsedKeys} ব্যবহৃত)</p>
           </div>
         </div>
 
         {/* Pool Keys Management */}
-        <section className="glass-card rounded-2xl p-6 space-y-4 border border-primary/20">
+        <section className="glass-card rounded-2xl p-6 space-y-4 border border-indigo/20">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Key className="w-5 h-5 text-primary" />
+              <Key className="w-5 h-5 text-indigo" />
               <h2 className="font-bold text-lg">পুল কি ম্যানেজমেন্ট</h2>
             </div>
             <p className="text-xs text-muted-foreground">{(pool || []).length} টি মোট</p>
@@ -514,13 +514,13 @@ export default function AdminPanel() {
         </div>
 
         {/* Submitted Numbers */}
-        <section className="glass-card rounded-2xl p-6 space-y-4 border border-primary/20">
+        <section className="glass-card rounded-2xl p-6 space-y-4 border border-teal/20">
           <button
             className="w-full flex items-center justify-between"
             onClick={() => setShowSubmittedNumbers((v) => !v)}
           >
             <div className="flex items-center gap-2 text-left">
-              <Send className="w-5 h-5 text-primary" />
+              <Send className="w-5 h-5 text-teal" />
               <div>
                 <h2 className="font-bold text-lg">সাবমিটেড নম্বর লিস্ট</h2>
                 <p className="text-xs text-muted-foreground">
@@ -617,13 +617,13 @@ export default function AdminPanel() {
         </section>
 
         {/* Reset History */}
-        <section className="glass-card rounded-2xl p-6 space-y-4 border border-primary/20">
+        <section className="glass-card rounded-2xl p-6 space-y-4 border border-rose/20">
           <button
             className="w-full flex items-center justify-between"
             onClick={() => setShowResetHistory((v) => !v)}
           >
             <div className="flex items-center gap-2 text-left">
-              <History className="w-5 h-5 text-primary" />
+              <History className="w-5 h-5 text-rose" />
               <div>
                 <h2 className="font-bold text-lg">রিসেট হিস্ট্রি</h2>
                 <p className="text-xs text-muted-foreground">রিসেট করা সব নম্বরের হিসাব</p>
