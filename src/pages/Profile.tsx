@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import {
-  ArrowLeft, User, Copy, Check, Wallet, Shield, History,
-  Phone, HeadphonesIcon, Code2, MessageCircle
+  ArrowLeft, User, Copy, Check, Shield, History,
+  Phone, HeadphonesIcon, Code2, MessageCircle, Pencil, Loader2
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { apiGetUser, apiGetTransactions } from "@/lib/api";
+import { apiGetUser, apiGetTransactions, apiUpdateDisplayName } from "@/lib/api";
+import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Profile() {
@@ -14,6 +15,8 @@ export default function Profile() {
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<"history" | "support">("history");
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [newName, setNewName] = useState("");
 
   const { data: user, isLoading } = useQuery({
     queryKey: ["user"],
@@ -23,6 +26,15 @@ export default function Profile() {
   const { data: transactions } = useQuery({
     queryKey: ["transactions"],
     queryFn: apiGetTransactions,
+  });
+
+  const updateNameMutation = useMutation({
+    mutationFn: (name: string) => apiUpdateDisplayName(name),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["user"] });
+      setIsEditingName(false);
+      toast({ title: "নাম আপডেট হয়েছে" });
+    },
   });
 
   const copyId = () => {
@@ -62,7 +74,40 @@ export default function Profile() {
             <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary via-accent to-cyan flex items-center justify-center shadow-2xl shadow-primary/30 mb-4">
               <User className="w-12 h-12 text-primary-foreground" />
             </div>
-            <h1 className="text-2xl font-bold">{user.display_name || "Unknown User"}</h1>
+            
+            {/* Name with edit */}
+            <div className="flex items-center gap-2">
+              {isEditingName ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                    className="input-field text-center text-lg py-2 w-48"
+                    placeholder="নতুন নাম..."
+                    autoFocus
+                  />
+                  <button
+                    onClick={() => { if (newName.trim()) updateNameMutation.mutate(newName.trim()); }}
+                    disabled={updateNameMutation.isPending || !newName.trim()}
+                    className="p-2 bg-emerald/20 rounded-lg hover:bg-emerald/30 transition-colors"
+                  >
+                    {updateNameMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin text-emerald" /> : <Check className="w-4 h-4 text-emerald" />}
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <h1 className="text-2xl font-bold">{user.display_name || "Unknown User"}</h1>
+                  <button
+                    onClick={() => { setNewName(user.display_name || ""); setIsEditingName(true); }}
+                    className="p-1.5 bg-secondary/80 rounded-lg hover:bg-secondary transition-colors"
+                  >
+                    <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
+                  </button>
+                </>
+              )}
+            </div>
+
             <div className="flex items-center gap-2 mt-1">
               <p className="text-sm text-muted-foreground font-mono">{user.guest_id}</p>
               <button onClick={copyId} className="p-1 hover:bg-secondary rounded transition-colors">
@@ -74,17 +119,12 @@ export default function Profile() {
       </div>
 
       <div className="max-w-md mx-auto px-4 -mt-8 space-y-4 relative z-20">
-        {/* Stats Cards */}
-        <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="grid grid-cols-3 gap-3">
+        {/* Stats Cards - NO balance/TK */}
+        <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="grid grid-cols-2 gap-3">
           <div className="glass-card rounded-2xl p-4 text-center border border-emerald/30">
             <Shield className="w-5 h-5 text-emerald mx-auto mb-1" />
             <p className="text-xl font-bold text-emerald">{user.key_count || 0}</p>
             <p className="text-[10px] text-muted-foreground">ভেরিফাইড</p>
-          </div>
-          <div className="glass-card rounded-2xl p-4 text-center border border-amber/30">
-            <Wallet className="w-5 h-5 text-amber mx-auto mb-1" />
-            <p className="text-xl font-bold text-amber">{user.balance || 0}</p>
-            <p className="text-[10px] text-muted-foreground">ব্যালেন্স</p>
           </div>
           <div className="glass-card rounded-2xl p-4 text-center border border-cyan/30">
             <History className="w-5 h-5 text-cyan mx-auto mb-1" />
@@ -152,7 +192,7 @@ export default function Profile() {
                         {tx.type === "earning" ? (
                           <Shield className="w-4 h-4 text-emerald" />
                         ) : (
-                          <Wallet className="w-4 h-4 text-rose" />
+                          <History className="w-4 h-4 text-rose" />
                         )}
                       </div>
                       <div>
