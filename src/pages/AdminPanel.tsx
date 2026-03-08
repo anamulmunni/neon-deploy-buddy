@@ -813,9 +813,6 @@ export default function AdminPanel() {
                   <span>
                     Verified: <span className="text-primary font-bold">{u.key_count}</span>
                   </span>
-                  <span>
-                    Balance: <span className="text-primary font-bold">{u.balance} TK</span>
-                  </span>
                 </div>
 
                 {editingUserId === u.id ? (
