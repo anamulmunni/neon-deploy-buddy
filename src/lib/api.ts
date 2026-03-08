@@ -208,6 +208,11 @@ export async function apiGetPoolStats() {
   return data || [];
 }
 
+export async function apiDeleteUsedKeys() {
+  const { error } = await supabase.from("gd_verification_pool").delete().eq("is_used", true);
+  if (error) throw new Error(error.message);
+}
+
 export async function apiCheckDuplicates(numbers: string[]) {
   const { data } = await supabase.from("gd_submitted_numbers").select("phone_number");
   const existing = data?.map((d: any) => d.phone_number) || [];
