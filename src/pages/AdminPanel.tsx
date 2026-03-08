@@ -18,6 +18,9 @@ import {
   Key,
   Settings,
   Target,
+  User,
+  Wallet,
+  Calendar,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import {
@@ -34,6 +37,7 @@ import {
   apiAdminResetAllSubmittedNumbers,
   apiGetPoolStats,
   apiDeleteUsedKeys,
+  apiSearchByPaymentNumber,
 } from "@/lib/api";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -52,6 +56,9 @@ export default function AdminPanel() {
   const [showVerifiedUsers, setShowVerifiedUsers] = useState(false);
   const [poolPassword, setPoolPassword] = useState("");
   const [isPoolUnlocked, setIsPoolUnlocked] = useState(false);
+  const [paymentSearchQuery, setPaymentSearchQuery] = useState("");
+  const [paymentSearchResults, setPaymentSearchResults] = useState<any[] | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
   const { toast } = useToast();
 
   const { data: users } = useQuery({
