@@ -44,6 +44,7 @@ export default function AdminPanel() {
   const [showSubmittedNumbers, setShowSubmittedNumbers] = useState(true);
   const [showResetHistory, setShowResetHistory] = useState(false);
   const [resetHistorySearch, setResetHistorySearch] = useState("");
+  const [bonusTargetInput, setBonusTargetInput] = useState("");
   const { toast } = useToast();
 
   const { data: users } = useQuery({
@@ -55,6 +56,12 @@ export default function AdminPanel() {
   const { data: settings } = useQuery({
     queryKey: ["admin-settings"],
     queryFn: apiAdminGetSettings,
+    enabled: isLoggedIn,
+  });
+
+  const { data: pool } = useQuery({
+    queryKey: ["admin-pool-stats"],
+    queryFn: apiGetPoolStats,
     enabled: isLoggedIn,
   });
 
