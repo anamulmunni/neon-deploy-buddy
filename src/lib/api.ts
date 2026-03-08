@@ -43,6 +43,16 @@ export async function apiLogin(guestId: string, displayName: string) {
   return newUser;
 }
 
+export async function apiUpdateDisplayName(name: string) {
+  const userId = getSessionUserId();
+  if (!userId) throw new Error("Unauthorized");
+  const { error } = await supabase
+    .from("gd_users")
+    .update({ display_name: name })
+    .eq("id", userId);
+  if (error) throw new Error(error.message);
+}
+
 export async function apiGetUser() {
   const userId = getSessionUserId();
   if (!userId) return null;
