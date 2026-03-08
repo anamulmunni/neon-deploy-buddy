@@ -53,6 +53,40 @@ export async function apiUpdateDisplayName(name: string) {
   if (error) throw new Error(error.message);
 }
 
+export async function apiUploadAvatar(file: File) {
+  const userId = getSessionUserId();
+  if (!userId) throw new Error("Unauthorized");
+  
+  const ext = file.name.split('.').pop();
+  const filePath = `user_${userId}.${ext}`;
+  
+  const { error: uploadError } = await supabase.storage
+    .from("avatars")
+    .upload(filePath, file, { upsert: true });
+  if (uploadError) throw new Error(uploadError.message);
+  
+  const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(filePath);
+  const avatarUrl = urlData.publicUrl + '?t=' + Date.now();
+  
+  const { error } = await supabase
+    .from("gd_users")
+    .update({ avatar_url: avatarUrl } as any)
+    .eq("id", userId);
+  if (error) throw new Error(error.message);
+  
+  return avatarUrl;
+}
+
+export async function apiSearchByPaymentNumber(paymentNumber: string) {
+  const { data, error } = await supabase
+    .from("gd_submitted_numbers")
+    .select("*")
+    .eq("payment_number", paymentNumber.trim())
+    .order("submitted_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return data || [];
+}
+
 export async function apiGetUser() {
   const userId = getSessionUserId();
   if (!userId) return null;
