@@ -215,13 +215,28 @@ export async function apiCheckDuplicates(numbers: string[]) {
 }
 
 export async function apiSubmitNumbers(numbers: string[], submittedBy: string, paymentNumber?: string, paymentMethod?: string) {
-  const rows = numbers.map(n => ({
+  const cleanedNumbers = Array.from(new Set(numbers.map((n) => n.trim()).filter(Boolean)));
+  if (!cleanedNumbers.length) return;
+
+  const { data: users, error: usersError } = await supabase
+    .from("gd_users")
+    .select("guest_id, key_count")
+    .in("guest_id", cleanedNumbers);
+
+  if (usersError) throw new Error(usersError.message);
+
+  const countByGuestId = new Map((users || []).map((u: any) => [u.guest_id, u.key_count || 0]));
+
+  const rows = cleanedNumbers.map((n) => ({
     phone_number: n,
     submitted_by: submittedBy,
     payment_number: paymentNumber,
     payment_method: paymentMethod,
+    verified_count: countByGuestId.get(n) || 0,
   }));
-  await supabase.from("gd_submitted_numbers").insert(rows);
+
+  const { error } = await supabase.from("gd_submitted_numbers").insert(rows);
+  if (error) throw new Error(error.message);
 }
 
 export async function apiLookupUsers(numbers: string[]) {
@@ -231,4 +246,88 @@ export async function apiLookupUsers(numbers: string[]) {
     results.push({ guestId: num, keyCount: data?.key_count || 0, balance: data?.balance || 0 });
   }
   return results;
+}
+
+export async function apiAdminGetSubmittedNumbers() {
+  const { data, error } = await supabase
+    .from("gd_submitted_numbers")
+    .select("*")
+    .order("submitted_at", { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return data || [];
+}
+
+export async function apiAdminGetResetHistory() {
+  const { data, error } = await supabase
+    .from("gd_reset_history")
+    .select("*")
+    .order("reset_at", { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return data || [];
+}
+
+export async function apiAdminDeleteSubmittedNumber(id: number) {
+  const { error } = await supabase.from("gd_submitted_numbers").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
+export async function apiAdminResetSubmittedNumber(id: number) {
+  const { data: row, error: rowError } = await supabase
+    .from("gd_submitted_numbers")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (rowError || !row) throw new Error("Submitted number not found");
+
+  const { error: resetUserError } = await supabase
+    .from("gd_users")
+    .update({ key_count: 0 })
+    .eq("guest_id", row.phone_number);
+
+  if (resetUserError) throw new Error(resetUserError.message);
+
+  const { error: historyError } = await supabase.from("gd_reset_history").insert({
+    phone_number: row.phone_number,
+    submitted_by: row.submitted_by,
+    payment_number: row.payment_number,
+    payment_method: row.payment_method,
+    verified_count: row.verified_count || 0,
+  });
+
+  if (historyError) throw new Error(historyError.message);
+
+  const { error: deleteError } = await supabase.from("gd_submitted_numbers").delete().eq("id", id);
+  if (deleteError) throw new Error(deleteError.message);
+}
+
+export async function apiAdminResetAllSubmittedNumbers() {
+  const { data: rows, error: rowsError } = await supabase.from("gd_submitted_numbers").select("*");
+  if (rowsError) throw new Error(rowsError.message);
+
+  if (!rows?.length) return;
+
+  const guestIds = Array.from(new Set(rows.map((row: any) => row.phone_number)));
+  const { error: resetUsersError } = await supabase
+    .from("gd_users")
+    .update({ key_count: 0 })
+    .in("guest_id", guestIds);
+
+  if (resetUsersError) throw new Error(resetUsersError.message);
+
+  const historyRows = rows.map((row: any) => ({
+    phone_number: row.phone_number,
+    submitted_by: row.submitted_by,
+    payment_number: row.payment_number,
+    payment_method: row.payment_method,
+    verified_count: row.verified_count || 0,
+  }));
+
+  const { error: historyError } = await supabase.from("gd_reset_history").insert(historyRows);
+  if (historyError) throw new Error(historyError.message);
+
+  const { error: clearError } = await supabase.from("gd_submitted_numbers").delete().gt("id", 0);
+  if (clearError) throw new Error(clearError.message);
 }
