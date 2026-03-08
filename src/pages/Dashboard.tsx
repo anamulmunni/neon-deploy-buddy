@@ -385,8 +385,9 @@ export default function Dashboard() {
         )}
 
         {/* Verified Key Count Hero */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-gradient-to-br from-primary to-emerald-600 rounded-3xl p-8 shadow-2xl shadow-primary/20 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-foreground/10 rounded-full blur-2xl transform translate-x-10 -translate-y-10" />
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-gradient-to-br from-primary via-accent to-pink-500 rounded-3xl p-8 shadow-2xl shadow-primary/30 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-40 h-40 bg-foreground/5 rounded-full blur-3xl transform translate-x-10 -translate-y-10" />
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-accent/20 rounded-full blur-2xl" />
           <div className="flex justify-between items-start mb-4 relative z-10">
             <div>
               <p className="text-primary-foreground/80 font-medium mb-1">মোট ভেরিফাইড কি</p>
