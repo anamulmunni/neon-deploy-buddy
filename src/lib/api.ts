@@ -127,11 +127,11 @@ export async function apiSubmitKey(privateKey: string) {
     user_id: userId,
     type: "earning",
     amount: rewardRate,
-    details: `Key: ${privateKey.substring(0, 10)}...`,
+    details: `Verification completed`,
     status: "completed",
   });
 
-  return { newBalance: user.balance + rewardRate, message: `Key verified! +${rewardRate} TK added` };
+  return { newBalance: user.balance + rewardRate, message: `Key verified! +1 verified added` };
 }
 
 export async function apiWithdraw(method: string, number: string, amount: number) {

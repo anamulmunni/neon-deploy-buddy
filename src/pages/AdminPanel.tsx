@@ -16,6 +16,8 @@ import {
   ChevronDown,
   ChevronUp,
   Key,
+  Settings,
+  Target,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import {
@@ -45,6 +47,8 @@ export default function AdminPanel() {
   const [showResetHistory, setShowResetHistory] = useState(false);
   const [resetHistorySearch, setResetHistorySearch] = useState("");
   const [bonusTargetInput, setBonusTargetInput] = useState("");
+  const [rewardRateInput, setRewardRateInput] = useState("");
+  const [showVerifiedUsers, setShowVerifiedUsers] = useState(false);
   const { toast } = useToast();
 
   const { data: users } = useQuery({
@@ -106,7 +110,10 @@ export default function AdminPanel() {
 
   const updateSettingMutation = useMutation({
     mutationFn: ({ key, value }: { key: string; value: string }) => apiAdminUpdateSettings(key, value),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-settings"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-settings"] });
+      queryClient.invalidateQueries({ queryKey: ["public-settings"] });
+    },
   });
 
   const resetSubmittedMutation = useMutation({
@@ -138,13 +145,9 @@ export default function AdminPanel() {
   });
 
   useEffect(() => {
-    setBonusTargetInput(settings?.bonusTarget ? String(settings.bonusTarget) : "10");
-  }, [settings?.bonusTarget]);
-
-  const filteredUsers =
-    users?.filter(
-      (u: any) => u.guest_id?.includes(searchQuery) || u.display_name?.includes(searchQuery),
-    ) || [];
+    if (settings?.bonusTarget) setBonusTargetInput(String(settings.bonusTarget));
+    if (settings?.rewardRate) setRewardRateInput(String(settings.rewardRate));
+  }, [settings?.bonusTarget, settings?.rewardRate]);
 
   const totalUsers = users?.length || 0;
 
@@ -157,6 +160,16 @@ export default function AdminPanel() {
     () => (pool || []).filter((item: any) => !item.is_used).length,
     [pool],
   );
+
+  const totalUsedKeys = useMemo(
+    () => (pool || []).filter((item: any) => item.is_used).length,
+    [pool],
+  );
+
+  const filteredUsers =
+    users?.filter(
+      (u: any) => u.guest_id?.includes(searchQuery) || u.display_name?.includes(searchQuery),
+    ) || [];
 
   const groupedSubmitted = useMemo(() => {
     const source = submittedNumbers || [];
@@ -215,8 +228,65 @@ export default function AdminPanel() {
           <h1 className="text-2xl font-bold">Admin Panel</h1>
         </div>
 
+        {/* Stats Overview */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="glass-card rounded-2xl p-4 text-center border border-primary/20">
+            <Users className="w-6 h-6 text-primary mx-auto mb-2" />
+            <p className="text-2xl font-bold text-primary">{totalUsers}</p>
+            <p className="text-xs text-muted-foreground">মোট ইউজার</p>
+          </div>
+          <div className="glass-card rounded-2xl p-4 text-center border border-primary/20">
+            <Key className="w-6 h-6 text-primary mx-auto mb-2" />
+            <p className="text-2xl font-bold text-primary">{totalReadyKeys}</p>
+            <p className="text-xs text-muted-foreground">রেডি কি ({totalUsedKeys} ব্যবহৃত)</p>
+          </div>
+        </div>
+
+        {/* 1+ Verified Users Section */}
+        <section className="glass-card rounded-2xl p-6 space-y-4 border border-emerald-500/20">
+          <button
+            className="w-full flex items-center justify-between"
+            onClick={() => setShowVerifiedUsers((v) => !v)}
+          >
+            <div className="flex items-center gap-2 text-left">
+              <UserCheck className="w-5 h-5 text-emerald-500" />
+              <div>
+                <h2 className="font-bold text-lg">1+ ভেরিফাইড ইউজার</h2>
+                <p className="text-xs text-muted-foreground">
+                  মোট: {usersWithVerified.length} জন
+                </p>
+              </div>
+            </div>
+            {showVerifiedUsers ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+          </button>
+
+          {showVerifiedUsers && (
+            <div className="space-y-2 max-h-[400px] overflow-y-auto">
+              {usersWithVerified.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-6">কোনো ভেরিফাইড ইউজার নেই</p>
+              ) : (
+                usersWithVerified.map((u: any) => (
+                  <div key={u.id} className="rounded-xl border border-border bg-secondary/30 p-3 flex items-center justify-between gap-3">
+                    <div>
+                      <p className="font-bold text-sm">{u.display_name || "No Name"}</p>
+                      <p className="font-mono text-xs text-muted-foreground">{u.guest_id}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-primary font-bold text-sm">{u.key_count} verified</p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+        </section>
+
+        {/* Settings */}
         <div className="glass-card rounded-2xl p-6 space-y-4">
-          <h2 className="font-bold text-lg">সেটিংস</h2>
+          <div className="flex items-center gap-2">
+            <Settings className="w-5 h-5 text-primary" />
+            <h2 className="font-bold text-lg">সেটিংস</h2>
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={() =>
@@ -249,8 +319,91 @@ export default function AdminPanel() {
               Bonus: {settings?.bonusStatus || "off"}
             </button>
           </div>
+
+          {/* Bonus Target Customization */}
+          <div className="space-y-2 pt-2 border-t border-border">
+            <div className="flex items-center gap-2">
+              <Target className="w-4 h-4 text-primary" />
+              <p className="text-sm font-bold">বোনাস টার্গেট কাউন্ট</p>
+            </div>
+            <div className="flex gap-2">
+              <input
+                type="number"
+                value={bonusTargetInput}
+                onChange={(e) => setBonusTargetInput(e.target.value)}
+                className="input-field flex-1"
+                placeholder="যেমন: 10"
+              />
+              <button
+                onClick={() => {
+                  if (bonusTargetInput) {
+                    updateSettingMutation.mutate({ key: "bonusTarget", value: bonusTargetInput });
+                    toast({ title: `বোনাস টার্গেট ${bonusTargetInput} সেট হয়েছে` });
+                  }
+                }}
+                className="btn-primary w-auto px-4"
+                disabled={!bonusTargetInput}
+              >
+                সেভ
+              </button>
+            </div>
+          </div>
+
+          {/* Reward Rate Customization */}
+          <div className="space-y-2 pt-2 border-t border-border">
+            <div className="flex items-center gap-2">
+              <Coins className="w-4 h-4 text-primary" />
+              <p className="text-sm font-bold">Reward Rate (প্রতি কি)</p>
+            </div>
+            <div className="flex gap-2">
+              <input
+                type="number"
+                value={rewardRateInput}
+                onChange={(e) => setRewardRateInput(e.target.value)}
+                className="input-field flex-1"
+                placeholder="যেমন: 40"
+              />
+              <button
+                onClick={() => {
+                  if (rewardRateInput) {
+                    updateSettingMutation.mutate({ key: "rewardRate", value: rewardRateInput });
+                    toast({ title: `Reward Rate ${rewardRateInput} সেট হয়েছে` });
+                  }
+                }}
+                className="btn-primary w-auto px-4"
+                disabled={!rewardRateInput}
+              >
+                সেভ
+              </button>
+            </div>
+          </div>
+
+          {/* Custom Notice */}
+          <div className="space-y-2 pt-2 border-t border-border">
+            <p className="text-sm font-bold">কাস্টম নোটিশ</p>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                defaultValue={settings?.customNotice || ""}
+                id="customNoticeInput"
+                className="input-field flex-1"
+                placeholder="নোটিশ লিখুন..."
+              />
+              <button
+                onClick={() => {
+                  const val = (document.getElementById("customNoticeInput") as HTMLInputElement)?.value || "";
+                  updateSettingMutation.mutate({ key: "customNotice", value: val });
+                  toast({ title: "নোটিশ আপডেট হয়েছে" });
+                }}
+                className="btn-primary w-auto px-4"
+              >
+                সেভ
+              </button>
+            </div>
+          </div>
         </div>
 
+        {/* Submitted Numbers */}
         <section className="glass-card rounded-2xl p-6 space-y-4 border border-primary/20">
           <button
             className="w-full flex items-center justify-between"
@@ -353,6 +506,7 @@ export default function AdminPanel() {
           )}
         </section>
 
+        {/* Reset History */}
         <section className="glass-card rounded-2xl p-6 space-y-4 border border-primary/20">
           <button
             className="w-full flex items-center justify-between"
@@ -408,6 +562,7 @@ export default function AdminPanel() {
           )}
         </section>
 
+        {/* Users List */}
         <div className="glass-card rounded-2xl p-6 space-y-4">
           <div className="flex items-center gap-2">
             <Users className="w-5 h-5 text-primary" />
@@ -447,10 +602,10 @@ export default function AdminPanel() {
 
                 <div className="flex gap-4 text-xs text-muted-foreground">
                   <span>
-                    Balance: <span className="text-primary font-bold">{u.balance} TK</span>
+                    Verified: <span className="text-primary font-bold">{u.key_count}</span>
                   </span>
                   <span>
-                    Keys: <span className="text-primary font-bold">{u.key_count}</span>
+                    Balance: <span className="text-primary font-bold">{u.balance} TK</span>
                   </span>
                 </div>
 
