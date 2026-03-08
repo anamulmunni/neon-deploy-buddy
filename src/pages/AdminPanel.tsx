@@ -137,10 +137,26 @@ export default function AdminPanel() {
     },
   });
 
+  useEffect(() => {
+    setBonusTargetInput(settings?.bonusTarget ? String(settings.bonusTarget) : "10");
+  }, [settings?.bonusTarget]);
+
   const filteredUsers =
     users?.filter(
       (u: any) => u.guest_id?.includes(searchQuery) || u.display_name?.includes(searchQuery),
     ) || [];
+
+  const totalUsers = users?.length || 0;
+
+  const usersWithVerified = useMemo(
+    () => (users || []).filter((u: any) => (u.key_count || 0) >= 1),
+    [users],
+  );
+
+  const totalReadyKeys = useMemo(
+    () => (pool || []).filter((item: any) => !item.is_used).length,
+    [pool],
+  );
 
   const groupedSubmitted = useMemo(() => {
     const source = submittedNumbers || [];
