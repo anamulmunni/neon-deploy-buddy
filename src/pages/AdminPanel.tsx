@@ -306,9 +306,8 @@ export default function AdminPanel() {
               ))}
             </div>
           )}
-        </section
-          </div>
-        </div>
+        </section>
+
 
         {/* 1+ Verified Users Section */}
         <section className="glass-card rounded-2xl p-6 space-y-4 border border-emerald-500/20">
