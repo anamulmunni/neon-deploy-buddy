@@ -33,6 +33,7 @@ import {
   apiAdminResetSubmittedNumber,
   apiAdminResetAllSubmittedNumbers,
   apiGetPoolStats,
+  apiDeleteUsedKeys,
 } from "@/lib/api";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -144,6 +145,14 @@ export default function AdminPanel() {
     },
   });
 
+  const deleteUsedKeysMutation = useMutation({
+    mutationFn: apiDeleteUsedKeys,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-pool-stats"] });
+      toast({ title: "সব ব্যবহৃত কি ডিলিট হয়েছে" });
+    },
+  });
+
   useEffect(() => {
     if (settings?.bonusTarget) setBonusTargetInput(String(settings.bonusTarget));
     if (settings?.rewardRate) setRewardRateInput(String(settings.rewardRate));
@@ -236,11 +245,78 @@ export default function AdminPanel() {
             <p className="text-xs text-muted-foreground">মোট ইউজার</p>
           </div>
           <div className="glass-card rounded-2xl p-4 text-center border border-primary/20">
-            <Key className="w-6 h-6 text-primary mx-auto mb-2" />
+         <Key className="w-6 h-6 text-primary mx-auto mb-2" />
             <p className="text-2xl font-bold text-primary">{totalReadyKeys}</p>
             <p className="text-xs text-muted-foreground">রেডি কি ({totalUsedKeys} ব্যবহৃত)</p>
           </div>
         </div>
+
+        {/* Pool Keys Management */}
+        <section className="glass-card rounded-2xl p-6 space-y-4 border border-primary/20">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Key className="w-5 h-5 text-primary" />
+              <h2 className="font-bold text-lg">পুল কি ম্যানেজমেন্ট</h2>
+            </div>
+            <p className="text-xs text-muted-foreground">{(pool || []).length} টি মোট</p>
+          </div>
+
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                const all = (pool || []).map((k: any) => `${k.private_key} | ${k.verify_url} | ${k.is_used ? "USED" : "READY"} | ${k.added_by}`).join("\n");
+                navigator.clipboard.writeText(all);
+                toast({ title: "সব কি কপি হয়েছে" });
+              }}
+              className="flex-1 flex items-center justify-center gap-2 p-3 bg-secondary rounded-xl text-xs font-bold hover:bg-secondary/80 transition-colors"
+            >
+              <Copy className="w-4 h-4" /> সব কপি
+            </button>
+            <button
+              onClick={() => {
+                const ready = (pool || []).filter((k: any) => !k.is_used).map((k: any) => `${k.private_key} | ${k.verify_url}`).join("\n");
+                navigator.clipboard.writeText(ready);
+                toast({ title: "রেডি কি কপি হয়েছে" });
+              }}
+              className="flex-1 flex items-center justify-center gap-2 p-3 bg-primary/20 text-primary rounded-xl text-xs font-bold hover:bg-primary/30 transition-colors"
+            >
+              <Copy className="w-4 h-4" /> রেডি কপি
+            </button>
+          </div>
+
+          <button
+            onClick={() => {
+              if (confirm("সব ব্যবহৃত কি ডিলিট করতে চান?")) deleteUsedKeysMutation.mutate();
+            }}
+            disabled={deleteUsedKeysMutation.isPending || totalUsedKeys === 0}
+            className="w-full flex items-center justify-center gap-2 p-3 bg-destructive/20 text-destructive rounded-xl text-xs font-bold hover:bg-destructive/30 transition-colors disabled:opacity-50"
+          >
+            {deleteUsedKeysMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Trash2 className="w-4 h-4" /> ব্যবহৃত কি ডিলিট ({totalUsedKeys})</>}
+          </button>
+
+          {(pool || []).length > 0 && (
+            <div className="space-y-2 max-h-[400px] overflow-y-auto">
+              {(pool || []).map((k: any) => (
+                <div key={k.id} className={`p-3 rounded-xl border text-xs space-y-1 ${k.is_used ? 'bg-destructive/5 border-destructive/20' : 'bg-primary/5 border-primary/20'}`}>
+                  <div className="flex justify-between items-center">
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${k.is_used ? 'bg-destructive/20 text-destructive' : 'bg-primary/20 text-primary'}`}>
+                      {k.is_used ? "USED" : "READY"}
+                    </span>
+                    <span className="text-muted-foreground">{k.added_by}</span>
+                  </div>
+                  <p className="font-mono truncate">{k.private_key}</p>
+                  <button
+                    onClick={() => { navigator.clipboard.writeText(k.private_key); toast({ title: "কপি হয়েছে" }); }}
+                    className="text-primary hover:underline text-[10px]"
+                  >
+                    কপি
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
 
         {/* 1+ Verified Users Section */}
         <section className="glass-card rounded-2xl p-6 space-y-4 border border-emerald-500/20">
