@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import {
   ShieldCheck,
@@ -15,6 +15,7 @@ import {
   Copy,
   ChevronDown,
   ChevronUp,
+  Key,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import {
@@ -29,6 +30,7 @@ import {
   apiAdminDeleteSubmittedNumber,
   apiAdminResetSubmittedNumber,
   apiAdminResetAllSubmittedNumbers,
+  apiGetPoolStats,
 } from "@/lib/api";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -42,6 +44,7 @@ export default function AdminPanel() {
   const [showSubmittedNumbers, setShowSubmittedNumbers] = useState(true);
   const [showResetHistory, setShowResetHistory] = useState(false);
   const [resetHistorySearch, setResetHistorySearch] = useState("");
+  const [bonusTargetInput, setBonusTargetInput] = useState("");
   const { toast } = useToast();
 
   const { data: users } = useQuery({
@@ -53,6 +56,12 @@ export default function AdminPanel() {
   const { data: settings } = useQuery({
     queryKey: ["admin-settings"],
     queryFn: apiAdminGetSettings,
+    enabled: isLoggedIn,
+  });
+
+  const { data: pool } = useQuery({
+    queryKey: ["admin-pool-stats"],
+    queryFn: apiGetPoolStats,
     enabled: isLoggedIn,
   });
 
@@ -128,10 +137,26 @@ export default function AdminPanel() {
     },
   });
 
+  useEffect(() => {
+    setBonusTargetInput(settings?.bonusTarget ? String(settings.bonusTarget) : "10");
+  }, [settings?.bonusTarget]);
+
   const filteredUsers =
     users?.filter(
       (u: any) => u.guest_id?.includes(searchQuery) || u.display_name?.includes(searchQuery),
     ) || [];
+
+  const totalUsers = users?.length || 0;
+
+  const usersWithVerified = useMemo(
+    () => (users || []).filter((u: any) => (u.key_count || 0) >= 1),
+    [users],
+  );
+
+  const totalReadyKeys = useMemo(
+    () => (pool || []).filter((item: any) => !item.is_used).length,
+    [pool],
+  );
 
   const groupedSubmitted = useMemo(() => {
     const source = submittedNumbers || [];
