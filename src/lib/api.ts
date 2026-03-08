@@ -78,13 +78,31 @@ export async function apiUploadAvatar(file: File) {
 }
 
 export async function apiSearchByPaymentNumber(paymentNumber: string) {
-  const { data, error } = await supabase
+  const trimmed = paymentNumber.trim();
+  
+  // Search in active submitted numbers
+  const { data: activeData } = await supabase
     .from("gd_submitted_numbers")
     .select("*")
-    .eq("payment_number", paymentNumber.trim())
+    .eq("payment_number", trimmed)
     .order("submitted_at", { ascending: false });
-  if (error) throw new Error(error.message);
-  return data || [];
+
+  // Also search in reset history
+  const { data: historyData } = await supabase
+    .from("gd_reset_history")
+    .select("*")
+    .eq("payment_number", trimmed)
+    .order("reset_at", { ascending: false });
+
+  // Combine both, marking source
+  const active = (activeData || []).map((r: any) => ({ ...r, source: "active" }));
+  const history = (historyData || []).map((r: any) => ({
+    ...r,
+    submitted_at: r.reset_at,
+    source: "reset",
+  }));
+
+  return [...active, ...history];
 }
 
 export async function apiGetUser() {
