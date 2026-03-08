@@ -33,6 +33,7 @@ import {
   apiAdminResetSubmittedNumber,
   apiAdminResetAllSubmittedNumbers,
   apiGetPoolStats,
+  apiDeleteUsedKeys,
 } from "@/lib/api";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -141,6 +142,14 @@ export default function AdminPanel() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-submitted-numbers"] });
       toast({ title: "নম্বর ডিলিট হয়েছে" });
+    },
+  });
+
+  const deleteUsedKeysMutation = useMutation({
+    mutationFn: apiDeleteUsedKeys,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-pool-stats"] });
+      toast({ title: "সব ব্যবহৃত কি ডিলিট হয়েছে" });
     },
   });
 
